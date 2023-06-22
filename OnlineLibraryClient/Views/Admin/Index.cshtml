@@ -1,0 +1,106 @@
+﻿@using OnlineLibraryClient.Controllers;
+<div class="container">
+    <div class="row">
+        <div class="col-12 text-center">
+            <h4><br></h4>
+        </div>
+        <div class="col-12 col-xl-2 offset-xl-4">
+            <h5>Сервіс</h5>
+            @*<select class="mb-2 mb-xl-0">
+                <option>Google Books</option>
+                <option>RoyalRoad</option>
+            </select>*@
+            <select id="enumSelect" class="mb-2 mb-xl-0" asp-items="Html.GetEnumSelectList<ServiceEnum>()">
+                @*<option value="">Choose a service</option>*@
+            </select>
+        </div>
+        <div class="col-12 col-xl-1 align-items-center" style="display: flex;">
+            <input type="submit" id="scan-service-btn" class="btn btn-secondary btn-sm" value="Запуск">
+        </div>
+        <div class="container">
+            <div class="row justify-content-center mt-4">
+                <div class="col-12 col-xl-6">
+                    <h5 class="text-center">Управління фоновим завданням</h5>
+                </div>
+            </div>
+            <form method="post">
+                <div class="row justify-content-center mb-3">
+                    <div class="col-12 col-xl-6">
+                        <div class="form-check form-check-inline col-6">
+                            <input class="form-check-input" type="radio" name="taskStatus" id="taskOn" value="on">
+                            <label class="form-check-label" for="taskOn">Вкл</label>
+                        </div>
+                        <div class="form-check form-check-inline col=6">
+                            <input class="form-check-input" type="radio" name="taskStatus" id="taskOff" value="off">
+                            <label class="form-check-label" for="taskOff">Викл</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row justify-content-center mb-3">
+                    <div class="col-12 col-xl-6">
+                        <div class="form-group">
+                            <label for="minutes">Хвилин</label>
+                            <input type="number" class="form-control" id="minutes" name="minutes" step="0.01" min="1">
+                        </div>
+                    </div>
+                </div>
+                <div class="row justify-content-center">
+                    <div class="col-12 col-xl-6">
+                        <button type="submit" class="btn btn-secondary">Застосувати</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Select the button element
+        $(document).ready(function () {
+            // Handle button click event
+            $("#scan-service-btn").on("click", function () {
+                var selectedValue = $("#enumSelect").val();
+                console.log(JSON.stringify({ "service": selectedValue }));
+                // Send AJAX request to the controller method
+                $.ajax({
+                    url: "/Admin/ScanService",
+                    type: "POST",
+                    data: JSON.stringify({ "service": selectedValue }),
+                    contentType: "application/json",
+                    success: function (response) {
+                        // Update the result message on the page
+                        $("#resultMessage").text(response.message);
+                    },
+                    error: function (xhr, status, error) {
+                        console.log(error);
+                    }
+                });
+            });
+        });
+
+        $(function () {
+            $('form').submit(function (event) {
+                event.preventDefault();
+                var form = $(this);
+                //var url = form.attr('action');
+                var method = form.attr('method');
+                var data = form.serialize();
+                $.ajax({
+                    url: "/Admin/ManageBackgroundTask",
+                    method: method,
+                    data: data,
+                    success: function (response) {
+                        // Handle the response here, e.g., display a success message
+                        console.log(response);
+                        alert(response.message);
+                    },
+                    error: function (xhr, status, error) {
+                        // Handle the error if needed
+                        console.log(error);
+                    }
+                });
+            });
+        });
+    </script>
+}

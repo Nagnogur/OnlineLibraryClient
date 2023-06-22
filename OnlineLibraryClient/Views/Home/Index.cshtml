@@ -1,0 +1,124 @@
+﻿@using Gateway.Models;
+@using ProcessingService.RetrieveLogic;
+@model BookQueryParameters;
+
+@{
+    ViewData["Title"] = "Home Page";
+    List<BookModel>? books = ViewData["Books"] as List<BookModel>;
+}
+<h1 style="text-align: center">Знайдіть вашу книгу</h1>
+
+<partial name="_FilterPartial" />
+
+<partial name="_ResultListPartial" />
+
+@*<form method="post" action="/Home/Filter">
+    <section class="search-nav">
+        <div class="container">
+            <div class="row">
+                <div class="col-6 col-xl-3 offset-xl-3" style="text-align: right; display: flex; justify-content: space-between; flex-direction: column;">
+                    <label for="title">Title:</label>
+                    <label for="author">Author:</label>
+                    <label for="minRating">Min Rating:</label>
+                    <label for="maxRating">Max Rating:</label>
+                    <label for="domain">Domain:</label>
+                    <label for="withSeveralLinks">WithSeveralLinks:</label>
+                    <label for="withDiscount">WithDiscount:</label>
+
+                    <label for="pageNumber">Page:</label>
+                </div>
+                <div class="col-6 col-xl-3">
+                    <input class="mb-1" type="text" id="title" name="Title">
+                    <input class="mb-1" type="text" id="author" name="Author">
+                    <input class="mb-1" type="number" id="minRating" name="MinRating">
+                    <input class="mb-1" type="number" id="maxRating" name="MaxRating">
+                    <input class="mb-1" type="text" id="domain" name="Domain">
+                    <br />
+                    <input class="mb-1" type="checkbox" id="withSeveralLinks" name="WithSeveralLinks" asp-for="@Model.WithSeveralLinks">
+                    <br />
+                    <input class="mb-1" type="checkbox" id="withDiscount" name="WithDiscount" asp-for="@Model.WithDiscount">
+                    <br />
+                    <input type="number" id="pageNumber" name="PageNumber">
+                </div>
+                <div class="col-12 text-center m-3">
+                    <button type="submit" class="btn btn-secondary">Filter</button>
+                </div>
+
+
+                <!-- Add more input fields for other parameters -->
+                @if (books != null)
+                {
+                    <div class="col-12">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        Image
+                                    </th>
+                                    <th>
+                                        Title
+                                    </th>
+                                    <th>
+                                        Authors
+                                    </th>
+                                    <th>
+                                        Links
+                                    </th>
+                                    <th>
+                                        Price
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+
+                                @foreach (BookModel book in books)
+                                {
+                                    <tr>
+                                        <td>
+                                            @if (book.ThumbnailLink != null)
+                                            {
+                                                <img src="@book.ThumbnailLink" alt="#" style="height: 150px; width: auto" />
+                                            }
+                                        </td>
+                                        <td>
+                                            @book.Title
+                                        </td>
+                                        <td>
+                                            @(string.Join(", ", book.Authors.Select(a => a.Name)))
+                                        </td>
+                                        <td>
+                                            <ul>
+                                                @foreach (var origin in book.Origin)
+                                                {
+                                                    <li>
+                                                        <a href="@origin.Link" target="_blank">@origin.Link</a>
+                                                    </li>
+                                                }
+                                            </ul>
+                                        </td>
+                                        <td>
+                                                @foreach (var origin in book.Origin)
+                                                {
+                                                    @if (origin.RetailPrice != null || origin.ListPrice != null && origin.RetailPrice < origin.ListPrice)
+                                                    {
+                                                            <strike>@origin.ListPrice</strike> @origin.RetailPrice
+                                                    }
+                                                    else if (origin.RetailPrice != null)
+                                                    {
+                                                            @origin.RetailPrice
+                                                    }
+
+                                        }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+</form>*@

@@ -1,0 +1,121 @@
+﻿@using System.Globalization;
+@using Gateway.Models;
+@model IEnumerable<Gateway.Models.BookModel>
+
+@{
+    ViewData["Title"] = "View";
+}
+
+<h1>View</h1>
+
+
+<div class="container-fluid">
+    @foreach (var item in Model)
+    {
+        <div class="row">
+            <div class="col-sm-2" style="margin-bottom: 5px; height: fit-content; width: auto;">
+                @if (item.ThumbnailFile != null && item.ThumbnailFile.Length > 5)
+                {
+                    <img src="data:image;base64,@System.Convert.ToBase64String(item.ThumbnailFile)" width="100" style="height: auto" max-height="140" />
+                }
+                else if (item.ThumbnailLink != null)
+                {
+                    <img src="@item.ThumbnailLink" width="100" style="height: auto" max-height="140" />
+                }
+                else
+                {
+                    <img src="~/images/book-cover-placeholder.png" alt="Sample Cover" width="100" style="height: auto" max-height="140" />
+                }
+            </div>
+            <div class="col-sm-10">
+                <div class="row">
+                    <div class="col-sm-10" style="font-size: 1.5em; word-wrap: break-word; font-weight: bold">
+                        <a href="/Writing/@item.BookId" style="text-decoration: none; color: black;">
+                            @item.Title
+                        </a>
+                    </div>
+                    <div class="col-sm-2">
+                        <input type="checkbox" class="form-check-input" id="check-@item.BookId" onchange="toggleDescription(@item.BookId)">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6">
+                        @(string.Join(", ", item.Authors.Select(a => a.Name.Trim(new char[] { ';' }))))
+                    </div>
+                    <div class="col-sm-6">
+                        @if (item.AverageRating != null)
+                        {
+                            <div>Середня оцінка: @item.AverageRating</div>
+                        }
+                    </div>
+                    <div class="col-sm-6">
+                        <time>@item.PublishedDate?.ToString("dd MMMM yyyy", new CultureInfo("uk-UA"))</time>
+                    </div>
+                    @if (item.FileLocation != null)
+                    {
+                        <div class="col-sm-6">
+                            <a href="https://localhost:7190/api/download/@item.BookId" class="btn btn-secondary btn-sm" style="display: inline-block; overflow: hidden; max-width: none; margin-bottom: 5px; margin-top: 5px">
+                                Скачати Твір
+                            </a>
+                        </div>
+                    }
+                    else if (item.Origin != null)
+                    {
+                        <div class="col-sm-6">
+                            <a href="@item.BookId/links" target="_blank" class="btn btn-secondary btn-sm" style="display: inline-block; overflow: hidden; max-width: none; margin-bottom: 5px; margin-top: 5px">
+                                Джерела
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="col-sm-6">
+                            <a class="btn btn-secondary btn-sm" style="display: inline-block; overflow: hidden; max-width: none; margin-bottom: 5px; margin-top: 5px">
+                                Скачати Твір
+                            </a>
+                        </div>
+                    }
+                    <div class="col-sm-6" style="font-weight: bold">
+                        @if (item.Origin == null || !item.Origin.Where(o => o.RetailPrice != null).Any())
+                        {
+                            <div>
+                                Безкоштовно
+                            </div>
+                        }
+                        else if (item.Origin.Where(o => o.RetailPrice < o.ListPrice).Any())
+                        {
+                            <strike>@item.Origin.FirstOrDefault(o => o.RetailPrice < o.ListPrice)?.ListPrice</strike> @item.Origin.FirstOrDefault(o => o.RetailPrice < o.ListPrice)?.RetailPrice <span>UAH</span>
+                        }
+                        else
+                        {
+                            @item.Origin.FirstOrDefault(o => o.RetailPrice != null)?.RetailPrice <span>UAH</span>
+                        }
+                    </div>
+                    <div @*class="col-sm-10"*@>
+                        @foreach (var category in item.Categories)
+                        {
+                            <a class="btn btn-secondary btn-sm" style="display: inline-block; overflow: hidden; max-width: none; margin-bottom: 5px; margin-top: 5px">
+                                @category.CategoryName
+                            </a>
+                        }
+                    </div>
+                    <div id="desc-@item.BookId" class="col-xs-12" style="overflow-wrap: break-word; margin-top: 20px; display:none;">
+                        @item.Description
+                    </div>
+                </div>
+            </div>
+        </div>
+        <hr>
+    }
+</div>
+<script>
+    function toggleDescription(id) {
+        const elem = document.getElementById("desc-" + id);
+        if (elem.style.display == 'none') {
+            elem.style.display = 'block';
+        }
+        else {
+            elem.style.display = 'none';
+        }
+    }
+</script>

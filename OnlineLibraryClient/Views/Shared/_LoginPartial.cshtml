@@ -1,0 +1,63 @@
+﻿@using Gateway.Models;
+@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Authorization
+@using System.IdentityModel.Tokens.Jwt;
+@*@inject SignInManager<UserModel> SignInManager
+@inject UserManager<UserModel> UserManager*@
+
+@{
+    var httpContext = Context.Request.HttpContext;
+    var token = httpContext.Session.GetString("JWTToken");
+    string? email = "";
+    IEnumerable<string>? roles = new List<string>();
+
+    if (token != null)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var decodedToken = tokenHandler.ReadJwtToken(token);
+
+        email = decodedToken.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name")?.Value;
+        roles = decodedToken.Claims.Where(c => c.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role")?.Select(s => s.Value);
+
+    } 
+}
+
+<ul class="navbar-nav">
+    @if (token != null && (roles != null && roles.Contains("Admin")))
+    {
+        <li class="nav-item">
+            @*<a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">@email</a>*@
+            <div class="nav-link text-dark" title="Email">@email</div>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-dark" asp-controller="Admin" asp-action="Index">Панель керування</a>
+        </li>
+        <li class="nav-item">
+            <form class="form-inline" asp-controller="User" asp-action="Logout">
+                <button type="submit" class="nav-link btn btn-link text-dark">Вийти</button>
+            </form>
+        </li>
+    }
+    else if (token != null)
+    {
+        <li class="nav-item">
+            @*<a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">@email</a>*@
+            <div class="nav-link text-dark" title="Email">@email</div>
+        </li>
+        <li class="nav-item">
+            <form class="form-inline" asp-controller="User" asp-action="Logout">
+                <button type="submit" class="nav-link btn btn-link text-dark">Вийти</button>
+            </form>
+        </li>
+    }
+    else
+    {
+        <li class="nav-item">
+            <a class="nav-link text-dark" asp-controller="User" asp-action="Register">Реєстрація</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-dark" asp-controller="User" asp-action="Login">Вхід</a>
+        </li>
+    }
+</ul>

@@ -1,0 +1,62 @@
+﻿@model Gateway.Models.BookModel
+
+@{
+    ViewData["Title"] = "View";
+}
+
+<h1>@Model.Title</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                Link
+            </th>
+            <th>
+                Listed price
+            </th>
+@*            <th>
+                currency
+            </th>*@
+            <th>
+                Retail price
+            </th>
+            <th>
+                Currency
+            </th>
+            <th>
+                Domain
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Origin)
+        {
+            <tr>
+                <td>
+                    <a href="@Html.DisplayFor(modelItem => item.Link)" target="_blank">@Html.DisplayFor(modelItem => item.Link)</a>
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ListPrice)
+                </td>
+@*                <td>
+                    @Html.DisplayFor(modelItem => item.CurrencyListPrice)
+                </td>*@
+                <td>
+                    @Html.DisplayFor(modelItem => item.RetailPrice)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CurrencyRetailPrice)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.PortalDomain)
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div>
+    <a asp-action="Index">Повернутися</a>
+</div>

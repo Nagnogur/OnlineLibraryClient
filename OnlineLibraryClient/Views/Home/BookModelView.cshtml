@@ -1,0 +1,18 @@
+﻿@using Gateway.Models;
+<!-- Отримання масиву об'єктів BookModel від сервера -->
+@{
+    var books = Model; // Припустимо, що масив об'єктів BookModel передано в змінну "Model"
+}
+
+<!-- Відображення списку книг -->
+<ul>
+    @foreach (BookModel book in books)
+    {
+        <li>@book.Title</li>
+        <li>@book.Subtitle</li>
+        <li><img src="@book.ThumbnailLink" alt="#" /></li>
+        @*<li>@book.Title</li>
+        <li>@book.Title</li>
+        <li>@book.Title</li>*@
+    }
+</ul>

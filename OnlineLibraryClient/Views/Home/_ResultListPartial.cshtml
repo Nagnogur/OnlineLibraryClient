@@ -1,0 +1,255 @@
+﻿@using Gateway.Models;
+@using System.Globalization;
+@using System.IdentityModel.Tokens.Jwt;
+@{
+    ViewData["Title"] = "Home Page";
+    List<BookModel>? books = ViewData["Books"] as List<BookModel>;
+
+    var httpContext = Context.Request.HttpContext;
+    var token = httpContext.Session.GetString("JWTToken");
+    string? id = "";
+
+    if (token != null)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var decodedToken = tokenHandler.ReadJwtToken(token);
+
+        id = decodedToken.Claims.FirstOrDefault(c => c.Type == "jti")?.Value;
+    }
+}
+
+<style>
+    .rating-list li {
+        float: right;
+        color: #ffd700;
+        padding: 10px 5px;
+    }
+
+        .rating-list li:hover,
+        .rating-list li:hover ~ li {
+            color: #ffd700;
+        }
+
+    .rating-list {
+        display: inline-block;
+        list-style: none;
+    }
+
+    .rating-list-set {
+        display: inline-block;
+        list-style: none;
+    }
+
+        .rating-list-set li {
+            float: right;
+            color: #ffd700;
+            padding: 10px 5px;
+        }
+</style>
+
+
+<div class="container-fluid">
+    @foreach (var item in books)
+    {
+        <div class="row">
+            <div class="col-sm-2" style="margin-bottom: 5px; height: fit-content; width: auto;">
+                @if (item.ThumbnailFile != null && item.ThumbnailFile.Length > 5)
+                {
+                    <img src="data:image;base64,@System.Convert.ToBase64String(item.ThumbnailFile)" width="100" style="height: auto" max-height="140" />
+                }
+                else if (item.ThumbnailLink != null)
+                {
+                    <img src="@item.ThumbnailLink" width="100" style="height: auto" max-height="140" />
+                }
+                else
+                {
+                    <img src="~/images/book-cover-placeholder.png" alt="Sample Cover" width="100" style="height: auto" max-height="140" />
+                }
+            </div>
+            <div class="col-sm-10">
+                <div class="row">
+                    <div class="col-sm-10" style="font-size: 1.5em; word-wrap: break-word; font-weight: bold">
+                        <a href="/Writing/@item.BookId" style="text-decoration: none; color: black;">
+                            @item.Title
+                        </a>
+                    </div>
+                    <div class="col-sm-2">
+                        <input type="checkbox" class="form-check-input" id="check-@item.BookId" onchange="toggleDescription(@item.BookId)">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6">
+                        @(string.Join(", ", item.Authors.Select(a => a.Name.Trim(new char[] { ';' }))))
+                    </div>
+                    <div class="col-sm-6">
+                        @if (item.AverageRating != null)
+                        {
+                            <div>Середня оцінка: @item.AverageRating</div>
+                        }
+                    </div>
+                    <div class="col-sm-6">
+                        <time>@item.PublishedDate?.ToString("dd MMMM yyyy", new CultureInfo("uk-UA"))</time>
+                    </div>
+                    @if (item.FileLocation != null)
+                    {
+                        <div class="col-sm-6">
+                            <a href="https://localhost:7190/api/download/@item.BookId" class="btn btn-secondary btn-sm" style="display: inline-block; overflow: hidden; max-width: none; margin-bottom: 5px; margin-top: 5px">
+                                Скачати Твір
+                            </a>
+                        </div>
+                    }
+                    else if (item.Origin != null)
+                    {
+                        <div class="col-sm-6">
+                            <a href="@item.BookId/links" target="_blank" class="btn btn-secondary btn-sm" style="display: inline-block; overflow: hidden; max-width: none; margin-bottom: 5px; margin-top: 5px">
+                                Джерела
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="col-sm-6">
+                            <a class="btn btn-secondary btn-sm" style="display: inline-block; overflow: hidden; max-width: none; margin-bottom: 5px; margin-top: 5px">
+                                Скачати Твір
+                            </a>
+                        </div>
+                    }
+                    <div class="col-sm-6" style="font-weight: bold">
+                        @if (item.Origin == null || !item.Origin.Where(o => o.RetailPrice != null).Any())
+                        {
+                            <div>
+                                Безкоштовно
+                            </div>
+                        }
+                        else if (item.Origin.Where(o => o.RetailPrice < o.ListPrice).Any())
+                        {
+                            <strike>@item.Origin.FirstOrDefault(o => o.RetailPrice < o.ListPrice)?.ListPrice</strike> @item.Origin.FirstOrDefault(o => o.RetailPrice < o.ListPrice)?.RetailPrice <span>UAH</span>
+                        }
+                        else
+                        {
+                            @item.Origin.FirstOrDefault(o => o.RetailPrice != null)?.RetailPrice <span>UAH</span>
+                        }
+                    </div>
+                    @if (id != "" && item.Reviews.Where(r => r.UserId == id && r.BookId == item.BookId).Any())
+                    {
+                        var rating = item.Reviews.FirstOrDefault(r => r.UserId == id && r.BookId == item.BookId).Rating;
+                        <div class="col-sm-6 ">
+                            <ul class="list-inline rating-list-set" id="rating-list-@item.BookId">
+                                @for (int i = 5; i >= 1; i--)
+                                {
+                                    if (i <= rating)
+                                    {
+                                        <li><i class="fa fa-star" title="Rate @i" onclick="setRating(@item.BookId, @i)"></i></li>
+                                    }
+                                    else
+                                    {
+                                        <li><i class="fa fa-star-o" title="Rate @i" onclick="setRating(@item.BookId, @i)"></i></li>
+                                    }
+                                }
+                            </ul>
+                        </div>
+                    }
+                    @*else
+                    {
+                        <div class="col-sm-6">
+                            <ul class="list-inline rating-list" id="rating-list-@item.BookId">
+                                <li><i class="fa fa-star-o" title="Rate 5" onclick="setRating(@item.BookId, 5)"></i></li>
+                                <li><i class="fa fa-star-o" title="Rate 4" onclick="setRating(@item.BookId, 4)"></i></li>
+                                <li><i class="fa fa-star-o" title="Rate 3" onclick="setRating(@item.BookId, 3)"></i></li>
+                                <li><i class="fa fa-star-o" title="Rate 2" onclick="setRating(@item.BookId, 2)"></i></li>
+                                <li><i class="fa fa-star-o" title="Rate 1" onclick="setRating(@item.BookId, 1)"></i></li>
+                            </ul>
+                        </div>
+                    }*@
+
+                    <div @*class="col-sm-10"*@>
+                        @foreach (var category in item.Categories)
+                        {
+                            <a class="btn btn-secondary btn-sm" style="display: inline-block; overflow: hidden; max-width: none; margin-bottom: 5px; margin-top: 5px">
+                                @category.CategoryName
+                            </a>
+                        }
+                    </div>
+                    <div id="desc-@item.BookId" class="col-xs-12" style="overflow-wrap: break-word; margin-top: 20px; display:none;">
+                        @item.Description
+                    </div>
+                </div>
+            </div>
+        </div>
+        <hr>
+    }
+</div>
+
+<script>
+    function toggleDescription(id) {
+        const elem = document.getElementById("desc-" + id);
+        if (elem.style.display == 'none') {
+            elem.style.display = 'block';
+        }
+        else {
+            elem.style.display = 'none';
+        }
+    };
+
+    function setRating(id, rating) {
+        // Create an object to hold the data to send
+        var data = {
+            bookId: id,
+            rating: rating
+        };
+
+        // Make an AJAX request to send the data to your app
+        fetch('/rate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        }).then(response => {
+            if (response.status == 401) {
+                window.location.href = "user/login";
+            }
+            return response.json()
+        })
+            .then(response => {
+                console.log(data);
+                // Update the UI with the new rating
+                var ratingList = document.getElementById('rating-list-' + id);
+                ratingList.innerHTML = '';
+
+                for (var i = 5; i >= 1; i--) {
+                    var li = document.createElement('li');
+                    var star = document.createElement('i');
+                    star.className = 'fa ' + (i <= data.rating ? 'fa-star' : 'fa-star-o');
+                    star.title = 'Rate ' + i;
+                    star.setAttribute("onclick", "setRating(" + id + ", " + i + ")");
+
+                    li.appendChild(star);
+                    ratingList.appendChild(li);
+                }
+            })
+            .catch(error => {
+                console.log(error);
+                console.error('Error:', error);
+                //window.location.href = "user/login";
+            });
+    };
+
+    /*var stars = document.querySelectorAll('.star');
+    stars.forEach(function (star) {
+        star.addEventListener('change', function () {
+            // Get the index of the selected star
+            var selectedIndex = Array.from(stars).indexOf(this);
+
+            // Update the styles of the labels
+            var labels = document.querySelectorAll('.star-select label');
+            labels.forEach(function (label, index) {
+                if (index <= selectedIndex) {
+                    label.classList.add('selected');
+                } else {
+                    label.classList.remove('selected');
+                }
+            });
+        });
+    });*/
+</script>
